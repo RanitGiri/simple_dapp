@@ -2,6 +2,7 @@ import "./App.css";
 import ConnectToMetaMask from "./components/ConnectToMetaMask";
 import { useState, useEffect } from "react";
 import Web3 from "web3";
+import { useSDK } from "@metamask/sdk-react";
 
 function App() {
   const [web3, setWeb3] = useState(null);
@@ -10,8 +11,9 @@ function App() {
   const [message, setMessage] = useState("");
   const [messageValue, setMessageValue] = useState("");
   const [loading, setLoading] = useState(false);
+  const { provider, connected } = useSDK();
 
-  const contractAddress = "0x9c346D56436FE877543a73791cCd3094808b6D2E";
+  const contractAddress = "0xE216d5139B8ffcDbe3895c4efc8285d6F5cB8348";
 
   const abi = [
     {
@@ -38,24 +40,28 @@ function App() {
   ];
 
   useEffect(() => {
+    if (!provider || !connected) return;
     const initWeb3 = async () => {
-      if (window.ethereum) {
-        const web3Instance = new Web3(window.ethereum);
+      
+        const web3Instance = new Web3(provider);
         setWeb3(web3Instance);
-        const accounts = await web3Instance.eth.requestAccounts();
+        const accounts = await web3Instance.eth.getAccounts();
         setAccounts(accounts);
         const contractInstance = new web3Instance.eth.Contract(
           abi,
           contractAddress
         );
         setContract(contractInstance);
-      }
+        provider.on("accountsChanged", (accs) => setAccounts(accs));
+        provider.on("chainChanged", () => window.location.reload());
+      
     };
 
     initWeb3();
-  }, []);
+  }, [provider, connected]);
 
   const sendMessage = async () => {
+    if (!contract || accounts.length === 0) return alert("Connect wallet first!");
     await contract.methods
       .createMessage(String(messageValue))
       .send({ from: accounts[0] });
@@ -65,6 +71,7 @@ function App() {
   };
 
   const getMessage = async () => {
+    if (!contract || accounts.length === 0) return;
     const message = await contract.methods.getMessage(accounts[0]).call();
     console.log("Message Received", message);
     setMessage(message);

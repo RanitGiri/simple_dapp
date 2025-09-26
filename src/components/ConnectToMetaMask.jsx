@@ -1,9 +1,13 @@
 import { useSDK } from "@metamask/sdk-react";
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 
 export default function ConnectToMetaMask() {
   const [account, setAccount] = useState();
   const { sdk, connected, connecting, provider, chainId } = useSDK();
+
+
+
+
 
   const connect = async () => {
     try {
@@ -14,13 +18,15 @@ export default function ConnectToMetaMask() {
     }
   };
 
+ 
   return (
     <div className="App">
       <button
         className="bg-blue-500 shadow-md text-white rounded-full px-8 py-2 hover:bg-blue-700 active:bg-blue-900"
-        onClick={connect}
+        onClick={connect }
       >
-        Connect to MetaMask
+        
+        {connected ? "Connected" : "Connect to MetaMask"}
       </button>
       {connected && (
         <div>
